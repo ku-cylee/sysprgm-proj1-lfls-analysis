@@ -1,0 +1,1 @@
+/home/sysprog/dev/linux/scripts/gdb/vmlinux-gdb.py
