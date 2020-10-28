@@ -32,8 +32,6 @@ static ssize_t sl_read(struct file *file, char __user *user_buffer,
 	sprintf(user_buffer, "idx: %d || time: %ld || fsname: %s || blocknum: %d\n", queueIndex, block.timestamp, block.fsname, block.blocknum);
 	queueIndex++;
 	printk(KERN_INFO "SysLogger Read (#%d)\n", queueIndex);
-	// queueIndex = (queueIndex + 1) % 100;
-	// return queueIndex;
 	if (queueIndex == 100) {
 		queueIndex = 0;
 		return 0;
