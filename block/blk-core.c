@@ -2089,12 +2089,12 @@ int queueIndex = 0;
 typedef struct {
 	unsigned int blocknum;
 	char* fsname;
-    long timestamp;
+	long timestamp;
 } BlockInfo;
 
 BlockInfo blockQueue[QUEUE_SIZE];
 EXPORT_SYMBOL(blockQueue);
-EXPORT_SYMBOL(QUEUE_SIZE);
+// EXPORT_SYMBOL(QUEUE_SIZE);
 
 char *safe_fs_name(struct bio *bio) {
 	if (bio == NULL) return NULL;
@@ -2133,24 +2133,19 @@ blk_qc_t submit_bio(int rw, struct bio *bio)
 
 		if (rw & WRITE) {
 			count_vm_events(PGPGOUT, count);
-            char *name = safe_fs_name(bio);
+			char *name = safe_fs_name(bio);
 			if (name != NULL) {
-                struct timeval tv;
-                do_gettimeofday(&tv);
+				struct timeval tv;
+				do_gettimeofday(&tv);
 
 				BlockInfo bInfo;
-                bInfo.blocknum = (unsigned int)bio->bi_iter.bi_sector;
-                bInfo.fsname = name;
-                bInfo.timestamp = tv.tv_sec * 1000000 + tv.tv_usec;
+				bInfo.blocknum = (unsigned int)bio->bi_iter.bi_sector;
+				bInfo.fsname = name;
+				bInfo.timestamp = tv.tv_sec * 1000000 + tv.tv_usec;
                 
-                blockQueue[queueIndex] = bInfo;
-                queueIndex = (queueIndex + 1) % QUEUE_SIZE;
-                if (queueIndex == 0) {
-                    BlockInfo lastBlock = blockQueue[QUEUE_SIZE - 1];
-                    printk("== BUFFER FULL ==\n");
-                    printk("== %s, %u ==\n", lastBlock.fsname, lastBlock.blocknum);
-                }
-            }
+				blockQueue[queueIndex] = bInfo;
+				queueIndex = (queueIndex + 1) % QUEUE_SIZE;
+			}
 		} else {
 			task_io_account_read(bio->bi_iter.bi_size);
 			count_vm_events(PGPGIN, count);
