@@ -33,6 +33,7 @@
 #include <linux/ratelimit.h>
 #include <linux/pm_runtime.h>
 #include <linux/blk-cgroup.h>
+#include <linux/time.h>
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/block.h>
@@ -2087,23 +2088,21 @@ int queueIndex = 0;
 
 typedef struct {
 	unsigned int blocknum;
-	const char* fsname;
+	char* fsname;
+    long timestamp;
 } BlockInfo;
 
 BlockInfo blockQueue[QUEUE_SIZE];
 EXPORT_SYMBOL(blockQueue);
+EXPORT_SYMBOL(QUEUE_SIZE);
 
-int safe_fs_name(struct bio *bio, char *name) {
-	if (bio == NULL) return -1;
-	if (bio->bi_bdev == NULL) return -1;
-	if (bio->bi_bdev->bd_super == NULL) return -1;
-	if (bio->bi_bdev->bd_super->s_type == NULL) return -1;
+char *safe_fs_name(struct bio *bio) {
+	if (bio == NULL) return NULL;
+	if (bio->bi_bdev == NULL) return NULL;
+	if (bio->bi_bdev->bd_super == NULL) return NULL;
+	if (bio->bi_bdev->bd_super->s_type == NULL) return NULL;
 
-	char *tmp_name = bio->bi_bdev->bd_super->s_type->name;
-	if (tmp_name == NULL) return -1;
-	
-	name = tmp_name;
-	return 0; 		
+	return bio->bi_bdev->bd_super->s_type->name;
 }
 
 /**
@@ -2134,12 +2133,15 @@ blk_qc_t submit_bio(int rw, struct bio *bio)
 
 		if (rw & WRITE) {
 			count_vm_events(PGPGOUT, count);
-            char *name = NULL;
-			int safe = safe_fs_name(bio, name);
-			if (safe == 0) {
+            char *name = safe_fs_name(bio);
+			if (name != NULL) {
+                struct timeval tv;
+                do_gettimeofday(&tv);
+
 				BlockInfo bInfo;
                 bInfo.blocknum = (unsigned int)bio->bi_iter.bi_sector;
                 bInfo.fsname = name;
+                bInfo.timestamp = tv.tv_sec * 1000000 + tv.tv_usec;
                 
                 blockQueue[queueIndex] = bInfo;
                 queueIndex = (queueIndex + 1) % QUEUE_SIZE;
