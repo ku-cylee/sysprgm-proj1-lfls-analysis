@@ -22,21 +22,21 @@ static struct proc_dir_entry *proc_dir;
 static struct proc_dir_entry *proc_file;
 
 static int sl_open(struct inode *inode, struct file *file) {
-	printk(KERN_INFO "SysLogger Open\n");
 	return 0;
 }
 
 static ssize_t sl_read(struct file *file, char __user *user_buffer,
 					   size_t count, loff_t *ppos) {
-	BlockInfo block = blockQueue[queueIndex];
-	sprintf(user_buffer, "idx: %d || time: %ld || fsname: %s || blocknum: %d\n", queueIndex, block.timestamp, block.fsname, block.blocknum);
-	queueIndex++;
-	printk(KERN_INFO "SysLogger Read (#%d)\n", queueIndex);
-	if (queueIndex == 100) {
+	if (queueIndex >= QUEUE_SIZE) {
 		queueIndex = 0;
 		return 0;
 	}
-	else return count;
+
+	BlockInfo block = blockQueue[queueIndex];
+	int len = sprintf(user_buffer, "idx: %d || time: %ld || fsname: %s || blocknum: %u\n", queueIndex, block.timestamp, block.fsname, block.blocknum);
+	queueIndex++;
+
+	return len;
 }
 
 static const struct file_operations sl_fops = {
@@ -46,7 +46,6 @@ static const struct file_operations sl_fops = {
 };
 
 static int __init sl_init(void) {
-	printk(KERN_INFO "SysLogger Init\n");
 	proc_dir = proc_mkdir(PROC_DIRNAME, NULL);
 	proc_file = proc_create(PROC_FILENAME, 0777, proc_dir, &sl_fops);
 	return 0;
@@ -55,7 +54,6 @@ static int __init sl_init(void) {
 static void __exit sl_exit(void) {
 	remove_proc_entry(PROC_FILENAME, proc_dir);
 	remove_proc_entry(PROC_DIRNAME, NULL);
-	printk(KERN_INFO "SysLogger Exit\n");
 	return;
 }
 
