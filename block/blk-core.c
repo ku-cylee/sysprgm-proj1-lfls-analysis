@@ -2082,7 +2082,7 @@ out:
 }
 EXPORT_SYMBOL(generic_make_request);
 
-#define QUEUE_SIZE 100
+#define QUEUE_SIZE 3000
 
 int queueIndex = 0;
 
@@ -2093,8 +2093,8 @@ typedef struct {
 } BlockInfo;
 
 BlockInfo blockQueue[QUEUE_SIZE];
+
 EXPORT_SYMBOL(blockQueue);
-// EXPORT_SYMBOL(QUEUE_SIZE);
 
 char *safe_fs_name(struct bio *bio) {
 	if (bio == NULL) return NULL;
