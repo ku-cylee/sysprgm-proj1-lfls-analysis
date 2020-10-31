@@ -15,7 +15,7 @@ typedef struct {
 
 static int queueIndex = 0;
 
-#define QUEUE_SIZE 100
+#define QUEUE_SIZE 3000
 extern BlockInfo blockQueue[QUEUE_SIZE];
 
 static struct proc_dir_entry *proc_dir;
@@ -33,6 +33,11 @@ static ssize_t sl_read(struct file *file, char __user *user_buffer,
 	}
 
 	BlockInfo block = blockQueue[queueIndex];
+	if (block.timestamp == NULL) {
+		queueIndex = 0;
+		return 0;
+	}
+
 	int len = sprintf(user_buffer, "idx: %d || time: %ld || fsname: %s || blocknum: %u\n", queueIndex, block.timestamp, block.fsname, block.blocknum);
 	queueIndex++;
 
@@ -61,6 +66,6 @@ module_init(sl_init);
 module_exit(sl_exit);
 
 MODULE_AUTHOR("KU");
-MODULE_DESCRIPTION("dsjfkl");
+MODULE_DESCRIPTION("LFS Profiling Module");
 MODULE_LICENSE("GPL");
 MODULE_VERSION("NEW");
