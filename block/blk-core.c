@@ -2092,7 +2092,7 @@ typedef struct {
 	long timestamp;
 } BlockInfo;
 
-BlockInfo blockQueue[QUEUE_SIZE];
+BlockInfo blockQueue[QUEUE_SIZE] = { NULL };
 
 EXPORT_SYMBOL(blockQueue);
 
